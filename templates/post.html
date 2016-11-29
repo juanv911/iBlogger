@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card full">
+    {% if post.image %}
+        <img class="card-img-top" src="{{post.image}}" alt="{{post.image}}">
+    {% endif %}
+    <div class="card-block">
+    <h4 class="card-title">{{post.title}}</h4>
+    <p class="card-text">by {{post.username}}</p>
+    <p class="card-text">{{post.content}}</p>
+        <ul class="stats">
+        <li><i class="fa fa-heart-o"></i></li>
+        <li><i class="fa fa-comment-o"></i></li>
+        <li class="right date"><i class="fa fa-calendar"></i>{{date}}</li>
+        </ul>
+    </div>
+</div>
+<div class="card full comment right">
+    <div class="card-block">
+    {% if not username %}
+    <p class="card-text"><a href="/login">Login</a> or <a href="/signup">Register</a> to add comments</p>
+    {% endif %}
+    {% if username %}
+    <h4 class="card-title">Add Comment</h4>
+    <form method="POST">
+        <div class="form-group row">
+        <div class="col-sm-10 full">
+          <textarea type="text" class="form-control" name="content">{{content}}</textarea>
+        </div>
+        </div>
+        <div class="error">{{error}}</div>
+        <input type="submit" class="btn btn-outline-primary">
+    </form>
+    {% endif %}
+    </div>
+</div>
+
+{% endblock %}

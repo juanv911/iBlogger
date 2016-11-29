@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+
+{% block content %}
+
+  <table class="table table-bordered table-striped">
+    <colgroup>
+      <col class="col-xs-1">
+      <col class="col-xs-7">
+    </colgroup>
+    <thead class="thead-inverse">
+        <th>Username</th>
+    </thead>
+    <tbody>
+        {% for user in users %}
+      <tr>
+        <td>{{user.name}}</td>
+      </tr>
+        {% endfor %}
+    </tbody>
+  </table>
+
+{% endblock %}
