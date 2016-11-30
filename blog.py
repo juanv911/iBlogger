@@ -178,6 +178,8 @@ class PostPage(BlogHandler):
         post = db.get(key)
         
         try:
+            # Retrieve comments for a specific post
+            comments = Comment.all().filter('post_id =', int(post_id))
             # Get created date and reformat the datetime format
             date = str(post.created)
             date = datetime.datetime.strptime(date, '%Y-%m-%d %H:%M:%S.%f').strftime("%d %b %Y")
@@ -188,15 +190,13 @@ class PostPage(BlogHandler):
             self.redirect("/")
             return
         if self.user:
-            # Retrieve comments for a specific post
-            comments = Comment.all().filter('post_id =', int(post_id))
-        # If post_id doesn't exists, redirect to home page
+            # If post_id doesn't exists, redirect to home page
             self.render("post.html", post = post, comments = comments, username = self.user.name,date = date )
         else:
             self.render("post.html", post = post, comments = comments, date = date)
 
-    # Add Comments
     def post(self, post_id):
+        # Add Comments
         # Return data of attributes from entity
         key = db.Key.from_path('Post', int(post_id), parent=blog_key())
         post = db.get(key)
@@ -223,6 +223,8 @@ class PostPage(BlogHandler):
         else:
             error = "Content, please!"
             self.render("post.html", title=title, image = image, comments = comments, error=error, username=username)
+
+        # Edit Post
 
 # Section for creating a new post
 class NewPost(BlogHandler):

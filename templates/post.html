@@ -15,14 +15,21 @@
         </ul>
     </div>
 </div>
-{% for comment in comments %}    
+{% if post.username == username %}
+<div class="card full">
+<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#editPost">Edit</button>
+<button type="button" class="btn btn-danger" data-toggle="modal" data-target="#deletePost">Delete</button>
+</div>
+
+{% endif %}
+
+{% for comment in comments %}  
 <div class="card full">
     <div class="card-block">
-    <p class="card-text">{{comment.comment}} = {{comment.username}}</p>
+    <p class="card-text">{{comment.comment}}</p>
     </div>
 </div>
 {% endfor %}
-
 <div class="card full">
     <div class="card-block">
     {% if not username %}
@@ -41,4 +48,42 @@
     </div>
 </div>
 
+<!-- Modal -->
+<div class="modal fade" id="editPost" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+        <h4 class="modal-title" id="myModalLabel">Edit Post</h4>
+      </div>
+      <div class="modal-body">
+      <form method="POST">
+    <div class="form-group row">
+      <div class="col-sm-10">
+        <input type="text" class="form-control" placeholder="Title" name="title" value="{{post.title}}">
+      </div>
+    </div>
+    <div class="form-group row">
+      <div class="col-sm-10">
+        <input type="text" class="form-control" placeholder="Image URL" name="image" value="{% if post.image %} {{post.image}} {% endif %}">
+      </div>
+    </div>
+    <div class="form-group row">
+      <div class="col-sm-10">
+          <textarea type="text" class="form-control" name="content">{{post.content}}</textarea>
+      </div>
+    </div>
+      <div class="error">{{error}}</div>
+      <!--input type="submit" class="btn btn-outline-primary"-->
+  </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary">Save changes</button>
+      </div>
+    </div>
+  </div>
+</div>
 {% endblock %}
