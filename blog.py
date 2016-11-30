@@ -92,7 +92,7 @@ class MainHandler(BlogHandler):
         # Check if Post contains any posts
         if posts:
             for post in posts:
-                comment =  db.GqlQuery("SELECT * FROM Comment WHERE post_id=:1", post.key().id())
+                #comment =  db.GqlQuery("SELECT * FROM Comment WHERE post_id=:1", post.key().id())
                 date = str(post.created)
                 date = datetime.datetime.strptime(date, '%Y-%m-%d %H:%M:%S.%f').strftime("%d %b %Y")
                 post_id = post.key().id()
@@ -177,21 +177,23 @@ class PostPage(BlogHandler):
         key = db.Key.from_path('Post', int(post_id), parent=blog_key())
         post = db.get(key)
         
-        # Get created date
         try:
+            # Get created date and reformat the datetime format
             date = str(post.created)
             date = datetime.datetime.strptime(date, '%Y-%m-%d %H:%M:%S.%f').strftime("%d %b %Y")
         except Exception: 
           pass
-
-        # If post_id doesn't exists, redirect to home page
+        
         if not post:
             self.redirect("/")
             return
         if self.user:
-            self.render("post.html", post = post, username = self.user.name,date = date )
+            # Retrieve comments for a specific post
+            comments = Comment.all().filter('post_id =', int(post_id))
+        # If post_id doesn't exists, redirect to home page
+            self.render("post.html", post = post, comments = comments, username = self.user.name,date = date )
         else:
-            self.render("post.html", post = post, date = date)
+            self.render("post.html", post = post, comments = comments, date = date)
 
     # Add Comments
     def post(self, post_id):

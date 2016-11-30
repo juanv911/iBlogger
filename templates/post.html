@@ -15,7 +15,15 @@
         </ul>
     </div>
 </div>
-<div class="card full comment right">
+{% for comment in comments %}    
+<div class="card full">
+    <div class="card-block">
+    <p class="card-text">{{comment.comment}} = {{comment.username}}</p>
+    </div>
+</div>
+{% endfor %}
+
+<div class="card full">
     <div class="card-block">
     {% if not username %}
     <p class="card-text"><a href="/login">Login</a> or <a href="/signup">Register</a> to add comments</p>
@@ -23,10 +31,8 @@
     {% if username %}
     <h4 class="card-title">Add Comment</h4>
     <form method="POST">
-        <div class="form-group row">
-        <div class="col-sm-10 full">
+        <div class="form-group">
           <textarea type="text" class="form-control" name="content">{{content}}</textarea>
-        </div>
         </div>
         <div class="error">{{error}}</div>
         <input type="submit" class="btn btn-outline-primary">

@@ -1,7 +1,3 @@
-body {
-  min-height: 75rem; /* Can be removed; just added for demo purposes */
-}
-
 .navbar {
   margin-bottom: 0;
 }
@@ -60,7 +56,6 @@ body {
 }
 
 .card {
-  float: left;
   width: 33.333%;
   padding: .75rem;
   margin-bottom: 2rem;
@@ -72,7 +67,7 @@ body {
 }
 
 .card-text {
-  font-size: 85%;
+  font-size: 80%;
 }
 
 footer {
