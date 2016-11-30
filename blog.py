@@ -185,7 +185,8 @@ class PostPage(BlogHandler):
             date = datetime.datetime.strptime(date, '%Y-%m-%d %H:%M:%S.%f').strftime("%d %b %Y")
         except Exception: 
           pass
-        
+
+        # Redirect to main page if post doesn't exist
         if not post:
             self.redirect("/")
             return
@@ -200,13 +201,19 @@ class PostPage(BlogHandler):
         # Return data of attributes from entity
         key = db.Key.from_path('Post', int(post_id), parent=blog_key())
         post = db.get(key)
-        # Values from input form
-        comment = self.request.get('content')
-        username = self.user.name
         
+        # Values from input form
+        # Post Comment
+        comment = self.request.get('content')
+
+        # Assign new content to post
+        editTitle = self.request.get('editTitle')
+        editImage = self.request.get('editImage')
+        editContent = self.request.get('editContent')
+                
         # Check if there is a logged in user and content is provided
         if comment and self.user:
-            c = Comment(parent = blog_key(), comment = comment, username = username, post_id = int(post_id))
+            c = Comment(parent = blog_key(), comment = comment, username = self.user.name, post_id = int(post_id))
             c.put()
 
             # Default value is None
@@ -221,10 +228,17 @@ class PostPage(BlogHandler):
                     
             self.redirect('/post/'+post_id)
         else:
-            error = "Content, please!"
-            self.render("post.html", title=title, image = image, comments = comments, error=error, username=username)
+            self.redirect('/post/'+post_id)
 
         # Edit Post
+        if editTitle or editImage or editContent:
+            post.title = editTitle
+            post.image = editImage
+            post.content = editContent
+            post.put()                   
+            self.redirect('/post/'+post_id)
+        else:
+            self.redirect('/post/'+post_id)
 
 # Section for creating a new post
 class NewPost(BlogHandler):
