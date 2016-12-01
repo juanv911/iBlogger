@@ -83,12 +83,12 @@ class MainHandler(BlogHandler):
     def render_front(self, title="", content="", username="", error=""):
         # Try & Catch to prevent errors when there are no posts in the datastore
         try:
+            # Get latest posts to the home page
+            posts = db.GqlQuery("SELECT * FROM Post ORDER BY created DESC")
+            db.delete(db.Query())
             # Get current logged in user
             if self.user:
                 username = self.user.name
-            # Get latest posts to the home page
-            posts = db.GqlQuery("SELECT * FROM Post ORDER BY created DESC")
-            #db.delete(db.Query())
             # Format date as 10 Nov 2016
             # Check if Post contains any posts
             if posts:
@@ -97,7 +97,7 @@ class MainHandler(BlogHandler):
                     date = datetime.datetime.strptime(date, '%Y-%m-%d %H:%M:%S.%f').strftime("%d %b %Y")
                     post_id = post.key().id()
 
-                    self.render("index.html", username = username, posts = posts, date = date, post_id = post_id)
+                self.render("index.html", username = username, posts = posts, date = date, post_id = post_id)
             else:
                 self.render("index.html", date = date, username = username)
         except Exception:
@@ -241,9 +241,10 @@ class PostPage(BlogHandler):
             post.content = editContent
             post.put()                   
             self.redirect('/post/'+post_id)
+            
         # Delete Post
         elif deletePost:
-            self.redirect('/')
+            post.delete()
         else:
             self.redirect('/post/'+post_id)
 

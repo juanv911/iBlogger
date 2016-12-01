@@ -19,12 +19,10 @@
 <div class="card full">
 <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#editPosModalt">Edit</button>
 <form id="deletePost" method="POST">
-    <button type="button" class="btn btn-danger" name="deletePost">Delete</button>
+    <input type="submit" class="btn btn-danger" name="deletePost">
 </form>
 </div>
-
 {% endif %}
-
 {% for comment in comments %}  
 <div class="card full">
     <div class="card-block">
