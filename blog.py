@@ -85,7 +85,7 @@ class MainHandler(BlogHandler):
         try:
             # Get latest posts to the home page
             posts = db.GqlQuery("SELECT * FROM Post ORDER BY created DESC")
-            db.delete(db.Query())
+            #db.delete(db.Query())
             # Get current logged in user
             if self.user:
                 username = self.user.name
@@ -193,7 +193,6 @@ class PostPage(BlogHandler):
             self.redirect("/")
             return
         if self.user:
-            # If post_id doesn't exists, redirect to home page
             self.render("post.html", post = post, comments = comments, username = self.user.name,date = date )
         else:
             self.render("post.html", post = post, comments = comments, date = date)
@@ -203,16 +202,17 @@ class PostPage(BlogHandler):
         # Return data of attributes from entity
         key = db.Key.from_path('Post', int(post_id), parent=blog_key())
         post = db.get(key)
+
         
         # Values from input form
-        # Post Comment
+        # Create Post
         comment = self.request.get('content')
-
-        # Assign new content to post
-        editPost = self.request.get('editPost')
+        # Edit Post
+        #editPost = self.request.get('editPost')
         editTitle = self.request.get('editTitle')
         editImage = self.request.get('editImage')
         editContent = self.request.get('editContent')
+        # Delete Post
         deletePost = self.request.get('deletePost')
                 
         # Check if there is a logged in user and content is provided
@@ -229,21 +229,25 @@ class PostPage(BlogHandler):
 
             # Update comments count              
             post.put()
-                    
+                        
             self.redirect('/post/'+post_id)
         else:
             self.redirect('/post/'+post_id)
 
         # Edit Post
-
-        if editPost and editTitle and editContent:
+        # Image parameter is optional
+        if  editTitle and editContent:
+            post.image = editImage
             post.title = editTitle
             post.content = editContent
             post.put()                   
             self.redirect('/post/'+post_id)
             
-        # Delete Post
+        # Delete Post and Comments
         elif deletePost:
+            comments = Comment.all().filter('post_id =', int(post_id))
+            for comment in comments:
+                comment.delete()
             post.delete()
         else:
             self.redirect('/post/'+post_id)
