@@ -25,12 +25,15 @@
             {% if not username %}<li class="nav-item"><a class="nav-link" href="/signup">Sign Up</a></li>{% endif %}
             {% if not username %}<li class="nav-item"><a class="nav-link" href="/login">Login</a></li>{% endif %}
             <li class="nav-item"><a class="nav-link" href="/users">Users</a></li>
-            {% if username %}<li class="nav-item"><a class="nav-link" href="/logout">( {{username}} ) Logout</a></li>{% endif %}
+            {% if username %}<li class="nav-item float-xs-right"><a class="nav-link" href="/logout">( {{username}} ) Logout</a></li>{% endif %}
         </ul>
+        {% if not username %}
         <form class="form-inline float-xs-right">
-            <input class="form-control" type="text" placeholder="Search">
-            <button class="btn btn-outline-success" type="submit">Search</button>
+            <input class="form-control" type="text" name="username" placeholder="Username">
+            <input class="form-control" type="password" name="password" placeholder="Password">
+            <button class="btn btn-outline-success" type="submit">Login</button>
         </form>
+        {% endif %}
     </div>
 </nav>
 {% block heading %}

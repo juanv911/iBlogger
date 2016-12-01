@@ -17,8 +17,10 @@
 </div>
 {% if post.username == username %}
 <div class="card full">
-<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#editPost">Edit</button>
-<button type="button" class="btn btn-danger" data-toggle="modal" data-target="#deletePost">Delete</button>
+<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#editPosModalt">Edit</button>
+<form id="deletePost" method="POST">
+    <button type="button" class="btn btn-danger" name="deletePost">Delete</button>
+</form>
 </div>
 
 {% endif %}
@@ -48,8 +50,8 @@
     </div>
 </div>
 
-<!-- Modal -->
-<div class="modal fade" id="editPost" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+<!-- Modal for Editing Post-->
+<div class="modal fade" id="editPosModalt" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
@@ -59,7 +61,7 @@
         <h4 class="modal-title" id="myModalLabel">Edit Post</h4>
       </div>
       <div class="modal-body">
-      <form method="POST" id="editComment">
+      <form method="POST" id="editContent">
     <div class="form-group row">
       <div class="col-sm-10">
         <input type="text" class="form-control" placeholder="Title" name="editTitle" value="{{post.title}}">
@@ -72,16 +74,15 @@
     </div>
     <div class="form-group row">
       <div class="col-sm-10">
-          <textarea type="text" class="form-control" name="editContent">{{post.content}}</textarea>
+          <textarea type="text" class="form-control" rows="8" name="editContent">{{post.content}}</textarea>
       </div>
     </div>
       <div class="error">{{error}}</div>
-      <!--input type="submit" class="btn btn-outline-primary"-->
   </form>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-        <button type="submit" class="btn btn-primary" form="editComment">Save changes</button>
+        <button type="submit" class="btn btn-primary" form="editPost">Save changes</button>
       </div>
     </div>
   </div>

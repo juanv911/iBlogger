@@ -1,16 +1,12 @@
 {% extends "base.html" %}
-
 {% block heading %}
 {% include "cover.html" %}
 {% endblock %}
-
 {% block content %}
 <div class="card-columns">
 {% for post in posts %}
 <div class="card">
-    {% if post.image %}
-        <img class="card-img-top" src="{{post.image}}" alt="{{post.image}}">
-    {% endif %}
+    {% if post.image %} <img class="card-img-top" src="{{post.image}}" alt="{{post.image}}"> {% endif %}
     <div class="card-block">
     <h4 class="card-title">{{post.title}}</h4>
         <p class="card-text">{{post.content[:300]}}</p>

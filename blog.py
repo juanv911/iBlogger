@@ -81,24 +81,26 @@ class MainHandler(BlogHandler):
         
     # Default values
     def render_front(self, title="", content="", username="", error=""):
-        # Get current logged in user
-        if self.user:
-            username = self.user.name
+        # Try & Catch to prevent errors when there are no posts in the datastore
+        try:
+            # Get current logged in user
+            if self.user:
+                username = self.user.name
+            # Get latest posts to the home page
+            posts = db.GqlQuery("SELECT * FROM Post ORDER BY created DESC")
+            #db.delete(db.Query())
+            # Format date as 10 Nov 2016
+            # Check if Post contains any posts
+            if posts:
+                for post in posts:
+                    date = str(post.created)
+                    date = datetime.datetime.strptime(date, '%Y-%m-%d %H:%M:%S.%f').strftime("%d %b %Y")
+                    post_id = post.key().id()
 
-        # Send latest posts to the home page
-        posts = db.GqlQuery("SELECT * FROM Post ORDER BY created DESC")
-                
-        # Format date as 10 Nov 2016
-        # Check if Post contains any posts
-        if posts:
-            for post in posts:
-                #comment =  db.GqlQuery("SELECT * FROM Comment WHERE post_id=:1", post.key().id())
-                date = str(post.created)
-                date = datetime.datetime.strptime(date, '%Y-%m-%d %H:%M:%S.%f').strftime("%d %b %Y")
-                post_id = post.key().id()
-
-            self.render("index.html", username = username, posts = posts, date = date, post_id = post_id)
-        else:
+                    self.render("index.html", username = username, posts = posts, date = date, post_id = post_id)
+            else:
+                self.render("index.html", date = date, username = username)
+        except Exception:
             self.render("index.html", username = username)
         
 # Generate random string
@@ -207,9 +209,11 @@ class PostPage(BlogHandler):
         comment = self.request.get('content')
 
         # Assign new content to post
+        editPost = self.request.get('editPost')
         editTitle = self.request.get('editTitle')
         editImage = self.request.get('editImage')
         editContent = self.request.get('editContent')
+        deletePost = self.request.get('deletePost')
                 
         # Check if there is a logged in user and content is provided
         if comment and self.user:
@@ -231,14 +235,21 @@ class PostPage(BlogHandler):
             self.redirect('/post/'+post_id)
 
         # Edit Post
-        if editTitle or editImage or editContent:
+
+        if editPost and editTitle and editContent:
             post.title = editTitle
-            post.image = editImage
             post.content = editContent
             post.put()                   
             self.redirect('/post/'+post_id)
+        # Delete Post
+        elif deletePost:
+            self.redirect('/')
         else:
             self.redirect('/post/'+post_id)
+
+
+
+
 
 # Section for creating a new post
 class NewPost(BlogHandler):
