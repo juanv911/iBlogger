@@ -5,6 +5,7 @@ body {
     color: #666;
     margin: 0px;
     line-height: 1.5em;
+    overflow-y: scroll;
 }
 textarea { 
    min-height: 100%;
@@ -34,6 +35,9 @@ img {
     float:left;
     width:70%;
 }
+.comments {
+    margin-bottom:1%;
+}
 .card.full.right {
     float:left;
     width:27.5%;
@@ -49,6 +53,10 @@ img {
 .stats {
     padding:0px;
     margin:0px;
+}
+
+.stats.comments {
+    display: inline-block;
 }
 .stats li{
     margin-right:10px;

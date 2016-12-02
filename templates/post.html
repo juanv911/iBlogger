@@ -24,9 +24,18 @@
 </div>
 {% endif %}
 {% for comment in comments %}  
-<div class="card full">
+<div class="card full comments">
     <div class="card-block">
+    <ul class="stats comments">
+    <li class="date"><strong>{{comment.username}}</strong> Commented on &nbsp;<i class="fa fa-calendar"></i>{{comment.created}}</li>
+    </ul>
     <p class="card-text">{{comment.comment}}</p>
+        {% if username == comment.username %}
+        <ul class="stats">
+            <li><i class="fa fa-remove"></i>Delete</li>
+            <li><i class="fa fa-edit"></i>Edit</li>
+        </ul>
+        {% endif %}
     </div>
 </div>
 {% endfor %}

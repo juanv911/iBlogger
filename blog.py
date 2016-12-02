@@ -181,7 +181,8 @@ class PostPage(BlogHandler):
         
         try:
             # Retrieve comments for a specific post
-            comments = Comment.all().filter('post_id =', int(post_id))
+            #comments = Comment.all().filter('post_id =', int(post_id))
+            comments = db.GqlQuery("SELECT * FROM Comment ORDER BY created DESC LIMIT 20")
             # Get created date and reformat the datetime format
             date = str(post.created)
             date = datetime.datetime.strptime(date, '%Y-%m-%d %H:%M:%S.%f').strftime("%d %b %Y")
