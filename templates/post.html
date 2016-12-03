@@ -35,7 +35,7 @@
       </li>
       <li><form id="deleteComment" method="POST">
         <input type="submit" class="btn btn-danger btn-sm" name="deleteComment" value="Delete">
-          <input type="hidden" name="commentId" value="{{comment.key().id()}}">
+        <input type="hidden" name="commentId" value="{{comment.key().id()}}">
         </form></li>
     </ul>
     {% endif %}
@@ -117,11 +117,11 @@
               <input type="hidden" name="commentId" value="{{comment.key().id()}}">
             </div>
           </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            <input type="submit" class="btn btn-primary" name="editComment" value="Save changes">
+          </div>
         </form>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-        <button type="submit" class="btn btn-primary" form="editComment">Save changes</button>
       </div>
     </div>
   </div>
