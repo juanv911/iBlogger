@@ -264,6 +264,8 @@ class PostPage(BlogHandler):
                 comment.put()
                 self.redirect('/post/'+post_id)
             elif deleteComment:
+                post.comments = post.comments - 1;
+                post.put()
                 comment.delete()
         else:
             self.redirect('/post/'+post_id)
