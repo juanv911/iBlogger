@@ -35,8 +35,11 @@ img {
     float:left;
     width:70%;
 }
+#deletePost {
+    float:left;
+}
 .comments {
-    margin-bottom:1%;
+    margin-bottom:2%;
 }
 .card.full.right {
     float:left;

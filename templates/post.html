@@ -10,19 +10,18 @@
     <p class="card-text">{{post.content}}</p>
         <ul class="stats">
         <li><i class="fa fa-heart-o"></i></li>
-        <li><i class="fa fa-comment-o"></i></li>
+        <li><i class="fa fa-comment-o"></i>{%if post.comments > 0 %}{{post.comments}} {% endif %}</li>
+        {% if post.username == username %}
+        <li><button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#editPostModal">Edit</button>
+</li>
+<li><form id="deletePost" method="POST">
+    <input type="submit" class="btn btn-danger btn-sm" name="deletePost" value="Delete">
+</form></li>
+        {% endif %}
         <li class="right date"><i class="fa fa-calendar"></i>{{date}}</li>
         </ul>
     </div>
 </div>
-{% if post.username == username %}
-<div class="card full">
-<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#editPosModalt">Edit</button>
-<form id="deletePost" method="POST">
-    <input type="submit" class="btn btn-danger" name="deletePost">
-</form>
-</div>
-{% endif %}
 {% for comment in comments %}  
 <div class="card full comments">
     <div class="card-block">
@@ -32,8 +31,11 @@
     <p class="card-text">{{comment.comment}}</p>
         {% if username == comment.username %}
         <ul class="stats">
-            <li><i class="fa fa-remove"></i>Delete</li>
-            <li><i class="fa fa-edit"></i>Edit</li>
+        <li><button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#editCommentModal_{{comment.key().id()}}">Edit</button>
+</li>
+<li><form id="deleteComment" method="POST">
+    <input type="submit" class="btn btn-danger btn-sm" name="deleteComment" value="Delete">
+</form></li>
         </ul>
         {% endif %}
     </div>
@@ -56,9 +58,9 @@
     {% endif %}
     </div>
 </div>
-
+{% if post.username == username %}
 <!-- Modal for Editing Post-->
-<div class="modal fade" id="editPosModalt" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+<div class="modal fade" id="editPostModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
@@ -94,4 +96,37 @@
     </div>
   </div>
 </div>
+{% endif %}
+
+{% for comment in comments %}
+{% if comment.username == username %}
+<!-- Modal for Editing Comment-->
+<div class="modal fade" id="editCommentModal_{{comment.key().id()}}" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+        <h4 class="modal-title" id="myModalLabel">Edit Comment</h4>
+      </div>
+      <div class="modal-body">
+      <form method="POST" id="editComment">
+    <div class="form-group row">
+      <div class="col-sm-10">
+          <textarea type="text" class="form-control" rows="8" name="editComment">{{comment.comment}}</textarea>
+      </div>
+    </div>
+      <div class="error">{{error}}</div>
+  </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        <button type="submit" class="btn btn-primary" form="editComment">Save changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+{% endfor %}
 {% endblock %}
