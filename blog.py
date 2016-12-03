@@ -204,7 +204,6 @@ class PostPage(BlogHandler):
         key = db.Key.from_path('Post', int(post_id), parent=blog_key())
         post = db.get(key)
 
-        
         # Values from input form
         # Create Post
         comment = self.request.get('content')
@@ -215,7 +214,12 @@ class PostPage(BlogHandler):
         editContent = self.request.get('editContent')
         # Delete Post
         deletePost = self.request.get('deletePost')
-                
+        # Edit Comment
+        commentId = self.request.get('commentId')
+        editComment = self.request.get('editComment')
+        deleteComment = self.request.get('deleteComment')
+
+        # Add comments       
         # Check if there is a logged in user and content is provided
         if comment and self.user:
             c = Comment(parent = blog_key(), comment = comment, username = self.user.name, post_id = int(post_id))
@@ -250,11 +254,19 @@ class PostPage(BlogHandler):
             for comment in comments:
                 comment.delete()
             post.delete()
+
+        # Edit and Delete Comment    
+        elif commentId:
+            c_key = db.Key.from_path('Comment', int(commentId), parent=blog_key())
+            comment = db.get(c_key)
+            if editComment:
+                comment.comment = editComment
+                comment.put()
+                self.redirect('/post/'+post_id)
+            elif deleteComment:
+                comment.delete()
         else:
             self.redirect('/post/'+post_id)
-
-
-
 
 
 # Section for creating a new post
@@ -366,6 +378,7 @@ class Login(BlogHandler):
         password = self.request.get('password')
         
         u = User.login(username, password)
+        
         if u:
             self.login(u)
             self.redirect('/')
