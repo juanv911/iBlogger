@@ -13,7 +13,8 @@ This is a multi user blog where users can sign in and post blog posts as well as
 * Post Comments
 * Edit Comments
 * Delete Comments
-* Likes
+* Like Post
+* Unlike Post
 * Users Page
 * Latest Posts on Home Page
 * Permalink Page
