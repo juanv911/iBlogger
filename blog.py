@@ -102,7 +102,7 @@ class MainHandler(BlogHandler):
                 self.render("index.html", date = date, username = username)
         except Exception:
             self.render("index.html", username = username)
-        
+            
 # Generate random string
 def make_salt(length = 5):
     return ''.join(random.choice(letters) for x in xrange(length))
@@ -173,6 +173,12 @@ class Comment(db.Model):
     comment = db.TextProperty(required = True)
     created = db.DateTimeProperty(auto_now_add = True)
 
+# Class for likes entities
+class Like(db.Model):
+    post_id = db.IntegerProperty(required = True)
+    username = db.StringProperty(required = True)
+    created = db.DateTimeProperty(auto_now_add = True)
+
 
 class PostPage(BlogHandler):
     def get(self, post_id):
@@ -181,8 +187,9 @@ class PostPage(BlogHandler):
         
         try:
             # Retrieve comments for a specific post
-            #comments = Comment.all().filter('post_id =', int(post_id))
             comments = db.GqlQuery("SELECT * FROM Comment WHERE post_id ="+ post_id +"ORDER BY created DESC LIMIT 20")
+            # Retrieve likes for a specific post
+            likes = db.GqlQuery("SELECT * FROM Like WHERE post_id ="+ post_id)
             # Get created date and reformat the datetime format
             date = str(post.created)
             date = datetime.datetime.strptime(date, '%Y-%m-%d %H:%M:%S.%f').strftime("%d %b %Y")
@@ -194,7 +201,7 @@ class PostPage(BlogHandler):
             self.redirect("/")
             return
         if self.user:
-            self.render("post.html", post = post, comments = comments, username = self.user.name,date = date )
+            self.render("post.html", post = post, likes = likes, comments = comments, username = self.user.name,date = date )
         else:
             self.render("post.html", post = post, comments = comments, date = date)
 
@@ -218,6 +225,11 @@ class PostPage(BlogHandler):
         commentId = self.request.get('commentId')
         editComment = self.request.get('editComment')
         deleteComment = self.request.get('deleteComment')
+        # Like Post
+        likePost = self.request.get('likePost')
+        # Unlike Post
+        unlikePost = self.request.get('unlikePost')
+
 
         # Add comments       
         # Check if there is a logged in user and content is provided
@@ -225,12 +237,13 @@ class PostPage(BlogHandler):
             c = Comment(parent = blog_key(), comment = comment, username = self.user.name, post_id = int(post_id))
             c.put()
 
+            # Comments counter
             # Default value is None
             # If post has not comments, set it to one
             if post.comments == None:
                 post.comments = 1
             else:
-                post.comments = int(post.comments)+1;
+                post.comments = int(post.comments) + 1;
 
             # Update comments count              
             post.put()
@@ -239,9 +252,8 @@ class PostPage(BlogHandler):
         else:
             self.redirect('/post/'+post_id)
 
-        # Edit Post
-        # Image parameter is optional
-        if  editTitle and editContent:
+        # Edit Post. Image parameter is optional
+        if editTitle and editContent:
             post.image = editImage
             post.title = editTitle
             post.content = editContent
@@ -264,9 +276,32 @@ class PostPage(BlogHandler):
                 comment.put()
                 self.redirect('/post/'+post_id)
             elif deleteComment:
-                post.comments = post.comments - 1;
-                post.put()
                 comment.delete()
+                post.comments = int(post.comments) - 1
+                post.put()
+        # Like Post
+        elif likePost:
+            like = Like(parent = blog_key(), username = self.user.name, post_id = int(post_id))
+            like.put()
+            
+            if post.likes == None:
+                post.likes = 1
+                post.put()
+                self.redirect('/post/'+post_id)
+            else:
+                post.likes = int(post.likes) + 1
+                post.put()
+                self.redirect('/post/'+post_id)
+                
+        # Unlike Post
+        elif unlikePost:
+            u_key = db.Key.from_path('Like', int(unlikePost), parent=blog_key())
+            like = db.get(u_key)
+            
+            like.delete()
+            post.likes = int(post.likes) - 1
+            post.put()
+            
         else:
             self.redirect('/post/'+post_id)
 

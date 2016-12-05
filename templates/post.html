@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% set liked = false %}
 {% block content %}
 <div class="card full">
   {% if post.image %}
@@ -9,13 +10,54 @@
     <p class="card-text">by {{post.username}}</p>
     <p class="card-text">{{post.content}}</p>
     <ul class="stats">
-      <li><i class="fa fa-heart-o"></i></li>
-      <li><i class="fa fa-comment-o"></i>{%if post.comments > 0 %}{{post.comments}} {% endif %}</li>
+    
+    {%if post.likes > 0 %}<li class="like"><i class="fa fa-heart-o"></i> {{post.likes}}</li>{% endif %}
+        
+<!-- If Post Has No Likes-->        
+    {% if post.username != username and post.likes == None %}
+    <li>
+        <form method="POST" id="likeForm">
+            <input type="hidden" name="likePost" value="{{post.key().id()}}">
+            <button type="submit" class="btn btn-outline-success btn-sm" form="likeForm">Like</button>
+        </form>   
+    </li>  
+    {% endif %}
+    {%if post.comments > 0 %}<li><i class="fa fa-comment-o"></i>{{post.comments}}</li>{% endif %}
+
+{% for like in likes %}
+    {% if post.username != username and like.username == username %}
+        {% set liked = true %}
+    {% endif %}
+    {% if post.username != username and like.username != username %}
+        {% set liked = false %}
+    {% endif %}
+    
+        
+    {% if post.username != username and like.username == username and liked == true %}
+        {% set liked = false %}
+    <li>
+        <form method="POST" id="unlikeForm">
+            <input type="hidden" name="unlikePost" value="{{like.key().id()}}">
+            <button type="submit" class="btn btn-outline-danger btn-sm" form="unlikeForm">Unlike</button>
+        </form>   
+    </li>
+    {% endif %}
+        
+    {% if post.username != username and like.username != username and liked == false %}   
+        
+    <li>
+        <form method="POST" id="likeForm">
+            <input type="hidden" name="likePost" value="{{post.key().id()}}">
+            <button type="submit" class="btn btn-outline-success btn-sm" form="likeForm">Like</button>
+        </form>   
+    </li>
+    {% endif %}
+{% endfor %}
       {% if post.username == username %}
-      <li><button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#editPostModal">Edit</button>
+      <li><button type="button" class="btn btn-outline-primary btn-sm" data-toggle="modal" data-target="#editPostModal">Edit</button>
       </li>
       <li><form id="deletePost" method="POST">
-        <input type="submit" class="btn btn-danger btn-sm" name="deletePost" value="Delete">
+        <input type="submit" class="btn btn-outline-danger btn-sm" name="deletePost" value="Delete">
         </form></li>
       {% endif %}
       <li class="right date"><i class="fa fa-calendar"></i>{{date}}</li>
@@ -26,15 +68,15 @@
 <div class="card full comments">
   <div class="card-block">
     <ul class="stats comments">
-      <li class="date"><strong>{{comment.username}}</strong> Commented on &nbsp;<i class="fa fa-calendar"></i>{{comment.created}}</li>
+      <li class="date comments"><strong>{{comment.username}}</strong> Commented on &nbsp;<i class="fa fa-calendar"></i>{{comment.created}}</li>
     </ul>
     <p class="card-text">{{comment.comment}}</p>
     {% if username == comment.username %}
     <ul class="stats">
-      <li><button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#editCommentModal_{{comment.key().id()}}">Edit</button>
+      <li><button type="button" class="btn btn-outline-primary btn-sm" data-toggle="modal" data-target="#editCommentModal_{{comment.key().id()}}">Edit</button>
       </li>
       <li><form id="deleteComment" method="POST">
-        <input type="submit" class="btn btn-danger btn-sm" name="deleteComment" value="Delete">
+        <input type="submit" class="btn btn-outline-danger btn-sm" name="deleteComment" value="Delete">
         <input type="hidden" name="commentId" value="{{comment.key().id()}}">
         </form></li>
     </ul>

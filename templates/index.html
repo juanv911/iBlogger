@@ -11,8 +11,8 @@
     <h4 class="card-title">{{post.title}}</h4>
         <p class="card-text">{{post.content[:300]}}</p>
         <ul class="stats">
-        <li><i class="fa fa-heart-o"></i></li>
-        <li><i class="fa fa-comment-o"></i>{%if post.comments > 0 %}{{post.comments}} {% endif %}</li>
+        {% if post.likes > 0 %}<li class="like"><i class="fa fa-heart-o"></i>{{post.likes}}</li>{% endif %}
+        {% if post.comments > 0 %}<li><i class="fa fa-comment-o"></i>{{post.comments}}</li>{% endif %}
         <li class="right date"><a href="post/{{post.key().id()}}"><i class="fa fa-calendar"></i>{{date}}</a></li>
         </ul>
     </div>
