@@ -16,8 +16,6 @@ jinja_env = jinja2.Environment(loader = jinja2.FileSystemLoader(template_dir),
 # Secret key to make HASH more secure
 secret = "udacity"
 
-
-
 def render_str(template, **params):
     t = jinja_env.get_template(template)
     return t.render(params)
@@ -25,7 +23,6 @@ def render_str(template, **params):
 # Create and validate cookies
 def make_secure_val(val):
     return '%s|%s' % (val, hmac.new(secret, val).hexdigest())
-
 
 def check_secure_val(secure_val):
     val = secure_val.split('|')[0]
@@ -75,7 +72,7 @@ class BlogHandler(webapp2.RequestHandler):
         self.user = uid and User.by_id(int(uid))
 
 # Section for main page
-class MainHandler(BlogHandler):
+class MainPage(BlogHandler):
     def get(self):
         self.render_front()
         
@@ -85,7 +82,6 @@ class MainHandler(BlogHandler):
         try:
             # Get latest posts to the home page
             posts = db.GqlQuery("SELECT * FROM Post ORDER BY created DESC")
-            #db.delete(db.Query())
             # Get current logged in user
             if self.user:
                 username = self.user.name
@@ -179,12 +175,13 @@ class Like(db.Model):
     username = db.StringProperty(required = True)
     created = db.DateTimeProperty(auto_now_add = True)
 
-
+# Section to render post on permalink page
 class PostPage(BlogHandler):
     def get(self, post_id):
         key = db.Key.from_path('Post', int(post_id), parent=blog_key())
         post = db.get(key)
-        
+        liked = False
+        likeId = None
         try:
             # Retrieve comments for a specific post
             comments = db.GqlQuery("SELECT * FROM Comment WHERE post_id ="+ post_id +"ORDER BY created DESC LIMIT 20")
@@ -201,21 +198,23 @@ class PostPage(BlogHandler):
             self.redirect("/")
             return
         if self.user:
-            self.render("post.html", post = post, likes = likes, comments = comments, username = self.user.name,date = date )
+            for like in likes:
+                if self.user.name == like.username:
+                    liked = True
+                    likeId = like.key().id()
+                    break
+            self.render("post.html", post = post, likes = likes, comments = comments, username = self.user.name,date = date, liked = liked, likeId = likeId)
         else:
             self.render("post.html", post = post, comments = comments, date = date)
 
     def post(self, post_id):
-        # Add Comments
         # Return data of attributes from entity
         key = db.Key.from_path('Post', int(post_id), parent=blog_key())
         post = db.get(key)
-
         # Values from input form
         # Create Post
         comment = self.request.get('content')
         # Edit Post
-        #editPost = self.request.get('editPost')
         editTitle = self.request.get('editTitle')
         editImage = self.request.get('editImage')
         editContent = self.request.get('editContent')
@@ -230,13 +229,11 @@ class PostPage(BlogHandler):
         # Unlike Post
         unlikePost = self.request.get('unlikePost')
 
-
         # Add comments       
         # Check if there is a logged in user and content is provided
         if comment and self.user:
             c = Comment(parent = blog_key(), comment = comment, username = self.user.name, post_id = int(post_id))
             c.put()
-
             # Comments counter
             # Default value is None
             # If post has not comments, set it to one
@@ -244,14 +241,11 @@ class PostPage(BlogHandler):
                 post.comments = 1
             else:
                 post.comments = int(post.comments) + 1;
-
             # Update comments count              
             post.put()
-                        
             self.redirect('/post/'+post_id)
         else:
             self.redirect('/post/'+post_id)
-
         # Edit Post. Image parameter is optional
         if editTitle and editContent:
             post.image = editImage
@@ -259,14 +253,13 @@ class PostPage(BlogHandler):
             post.content = editContent
             post.put()                   
             self.redirect('/post/'+post_id)
-            
         # Delete Post and Comments
         elif deletePost:
+            # Delete all comments that belong to the post to be deleted
             comments = Comment.all().filter('post_id =', int(post_id))
             for comment in comments:
                 comment.delete()
             post.delete()
-
         # Edit and Delete Comment    
         elif commentId:
             c_key = db.Key.from_path('Comment', int(commentId), parent=blog_key())
@@ -283,7 +276,7 @@ class PostPage(BlogHandler):
         elif likePost:
             like = Like(parent = blog_key(), username = self.user.name, post_id = int(post_id))
             like.put()
-            
+            # Set counter to one if it has no likes when form is submitted
             if post.likes == None:
                 post.likes = 1
                 post.put()
@@ -291,17 +284,15 @@ class PostPage(BlogHandler):
             else:
                 post.likes = int(post.likes) + 1
                 post.put()
-                self.redirect('/post/'+post_id)
-                
+                self.redirect('/post/'+post_id) 
         # Unlike Post
         elif unlikePost:
             u_key = db.Key.from_path('Like', int(unlikePost), parent=blog_key())
             like = db.get(u_key)
-            
+            # Delete like and decrease likes counter
             like.delete()
             post.likes = int(post.likes) - 1
             post.put()
-            
         else:
             self.redirect('/post/'+post_id)
 
@@ -413,9 +404,7 @@ class Login(BlogHandler):
     def post(self):
         username = self.request.get('username')
         password = self.request.get('password')
-        
         u = User.login(username, password)
-        
         if u:
             self.login(u)
             self.redirect('/')
@@ -440,7 +429,7 @@ class ShowUsers(BlogHandler):
             self.render('users.html', users = users)
 
 app = webapp2.WSGIApplication([
-    ('/', MainHandler),
+    ('/', MainPage),
     ('/post/([0-9]+)', PostPage),
     ('/newpost', NewPost),
     ('/signup', Register),
