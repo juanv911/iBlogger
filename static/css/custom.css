@@ -32,8 +32,9 @@ img {
     box-sizing: border-box;
 }
 .card.full {
-    float:left;
-    width:70%;
+    margin: 0 auto;
+    margin-bottom:3%;
+    width:60%;
 }
 #deletePost {
     float:left;
@@ -52,12 +53,10 @@ img {
 .card p {
     word-wrap: break-word;
 }
-
 .stats {
     padding:0px;
     margin:0px;
 }
-
 .stats.comments {
     display: inline-block;
 }
@@ -72,7 +71,6 @@ img {
 .stats li.right{
     float:right;
 }
-
 .stats .date {
     text-transform: uppercase;
     font-size:12px;
@@ -80,6 +78,12 @@ img {
 .stats .date.comments {
     text-transform: none;
     font-size:12px;
+}
+.stats .date a {
+    color:#666;
+}
+.stats .date:hover a {
+    color:#222;
 }
 .like button {
     padding: 0;
@@ -89,11 +93,29 @@ img {
 .like button:active {
   color:initial;
 }
-.card-columns {
-  @include media-breakpoint-only(lg) {
-    column-count: 4;
-  }
-  @include media-breakpoint-only(xl) {
-    column-count: 5;
-  }
+.menu {
+    background-color:#435C74;
+    height:77px;
+}
+.menu ul li a {
+    color: rgba(255, 255, 255, .6)!important;
+    line-height: 44px;
+}
+.menu ul li a:hover {
+    color:#fff!important;  
+}
+.profile {
+    color: rgba(255, 255, 255, .5);
+}
+.profile a{
+    display: inline-block!important;
+}
+.login.form-inline {
+    line-height: 58px;
+}
+.card-title a {
+    color:#555;
+}
+.card-title a:hover {
+    color:#222;
 }

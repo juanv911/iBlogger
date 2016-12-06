@@ -8,10 +8,10 @@
 <div class="card">
     {% if post.image %} <img class="card-img-top" src="{{post.image}}" alt="{{post.image}}"> {% endif %}
     <div class="card-block">
-    <h4 class="card-title">{{post.title}}</h4>
+        <h4 class="card-title"><a href="post/{{post.key().id()}}">{{post.title}}</a></h4>
         <p class="card-text">{{post.content[:300]}}</p>
         <ul class="stats">
-        {% if post.likes > 0 %}<li class="like"><i class="fa fa-heart-o"></i>{{post.likes}}</li>{% endif %}
+        {% if post.likes != None and post.likes != 0 %}<li class="like"><i class="fa fa-heart-o"></i>{{post.likes}}</li>{% endif %}
         {% if post.comments > 0 %}<li><i class="fa fa-comment-o"></i>{{post.comments}}</li>{% endif %}
         <li class="right date"><a href="post/{{post.key().id()}}"><i class="fa fa-calendar"></i>{{date}}</a></li>
         </ul>
