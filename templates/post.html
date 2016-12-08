@@ -14,14 +14,14 @@
     {% if post.username != username and username %}
     {% if liked == True and likeId != None %}
     <li>
-        <form method="POST" id="unlikeForm">
+        <form action="/post/{{post.key().id()}}/unlike" method="POST" id="unlikeForm">
             <input type="hidden" name="unlikePost" value="{{likeId}}">
             <button type="submit" class="btn btn-outline-danger btn-sm" form="unlikeForm"><i class="fa fa-heart"></i>Unlike</button>
         </form>   
     </li>
     {% else %}
     <li>
-        <form method="POST" id="likeForm">
+        <form action="/post/{{post.key().id()}}/like" method="POST" id="likeForm">
             <input type="hidden" name="likePost" value="{{post.key().id()}}">
             <button type="submit" class="btn btn-outline-success btn-sm" form="likeForm"><i class="fa fa-heart"></i>Like</button>
         </form>   
@@ -31,7 +31,7 @@
     {% if post.username == username %}
     <li><button type="button" class="btn btn-outline-primary btn-sm" data-toggle="modal" data-target="#editPostModal"><i class="fa fa-edit"></i>Edit</button></li>
     <li>
-        <form id="deletePost" method="POST">
+        <form action="/post/{{post.key().id()}}/delete" id="deletePost" method="POST">
             <input type="hidden" name="deletePost" value="Delete">
         </form>
         <button type="submit" class="btn btn-outline-danger btn-sm" form="deletePost"><i class="fa fa-remove"></i>Delete</button>
@@ -52,12 +52,10 @@
     <ul class="stats">
       <li><button type="button" class="btn btn-outline-primary btn-sm" data-toggle="modal" data-target="#editCommentModal_{{comment.key().id()}}"><i class="fa fa-edit"></i>Edit</button>
       </li>
-      <li><form id="deleteComment" method="POST">
-        <input type="hidden" name="deleteComment" value="Delete">
+      <li><form action="/post/{{post.key().id()}}/deleteComment" id="deleteComment" method="POST">
         <input type="hidden" name="commentId" value="{{comment.key().id()}}">
         </form>
           <button type="submit" class="btn btn-outline-danger btn-sm" form="deleteComment"><i class="fa fa-remove"></i>Delete</button>
-
         </li>
     </ul>
     {% endif %}
@@ -71,7 +69,7 @@
     {% endif %}
     {% if username %}
     <h4 class="card-title">Add Comment</h4>
-    <form method="POST">
+    <form action="/post/{{post.key().id()}}/addComment" method="POST">
       <div class="form-group">
         <textarea type="text" class="form-control" name="content" required>{{content}}</textarea>
       </div>
@@ -93,7 +91,7 @@
         <h4 class="modal-title" id="myModalLabel">Edit Post</h4>
       </div>
       <div class="modal-body">
-        <form method="POST" id="editContent">
+        <form action="/post/{{post.key().id()}}/edit" method="POST" id="editContent">
           <div class="form-group row">
             <div class="col-sm-10">
               <input type="text" class="form-control" placeholder="Title" name="editTitle" value="{{post.title}}">
@@ -132,7 +130,7 @@
         <h4 class="modal-title" id="myModalLabel">Edit Comment</h4>
       </div>
       <div class="modal-body">
-        <form method="POST" id="editComment">
+        <form action="/post/{{comment.key().id()}}/editComment" method="POST" id="editComment">
           <div class="form-group row">
             <div class="col-sm-10">
               <textarea type="text" class="form-control" rows="8" name="editComment">{{comment.comment}}</textarea>

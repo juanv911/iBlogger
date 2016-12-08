@@ -10,8 +10,8 @@ import datetime
 from google.appengine.ext import db
 
 template_dir = os.path.join(os.path.dirname(__file__), 'templates')
-jinja_env = jinja2.Environment(loader = jinja2.FileSystemLoader(template_dir),
-                               autoescape = True)
+jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(template_dir),
+                               autoescape=True)
 
 # Secret key to make HASH more secure
 secret = "udacity"
@@ -29,7 +29,7 @@ def check_secure_val(secure_val):
     if secure_val == make_secure_val(val):
         return val
 
-def blog_key(name = 'default'):
+def blog_key(name='default'):
     return db.Key.from_path('blogs', name)
 
 # Main call to the datastore
@@ -75,13 +75,14 @@ class BlogHandler(webapp2.RequestHandler):
 class MainPage(BlogHandler):
     def get(self):
         self.render_front()
-        
+
     # Default values
     def render_front(self, title="", content="", username="", error=""):
-        # Try & Catch to prevent errors when there are no posts in the datastore
+        # Try & Catch to prevent errors when there are no posts
         try:
             # Get latest posts to the home page
             posts = db.GqlQuery("SELECT * FROM Post ORDER BY created DESC")
+            
             # Get current logged in user
             if self.user:
                 username = self.user.name
@@ -90,21 +91,22 @@ class MainPage(BlogHandler):
             if posts:
                 for post in posts:
                     date = str(post.created)
-                    date = datetime.datetime.strptime(date, '%Y-%m-%d %H:%M:%S.%f').strftime("%d %b %Y")
+                    date = datetime.datetime.strptime(date, '%Y-%m-%d %H:%M:%S.%f')
+                    date = date.strftime("%d %b %Y")
                     post_id = post.key().id()
 
-                self.render("index.html", username = username, posts = posts, date = date, post_id = post_id)
+                self.render("index.html", username=username, posts=posts, date=date)
             else:
-                self.render("index.html", date = date, username = username)
+                self.render("index.html", date=date, username=username)
         except Exception:
-            self.render("index.html", username = username)
-            
+            self.render("index.html", username=username)
+
 # Generate random string
-def make_salt(length = 5):
+def make_salt(length=5):
     return ''.join(random.choice(letters) for x in xrange(length))
 
 # Combine random string with SHA256
-def make_pw_hash(name, pw, salt = None):
+def make_pw_hash(name, pw, salt=None):
     if not salt:
         salt = make_salt()
     h = hashlib.sha256(name + pw + salt).hexdigest()
@@ -114,19 +116,19 @@ def valid_pw(name, password, h):
     salt = h.split(',')[0]
     return h == make_pw_hash(name, password, salt)
 
-def users_key(group = 'default'):
+def users_key(group='default'):
     return db.Key.from_path('users', group)
 
 # Class for user entities
 class User(db.Model):
-    name = db.StringProperty(required = True)
-    pw_hash = db.StringProperty(required = True)
+    name = db.StringProperty(required=True)
+    pw_hash = db.StringProperty(required=True)
     email = db.StringProperty()
 
     # Create objects before uploading to database
     @classmethod
     def by_id(cls, uid):
-        return User.get_by_id(uid, parent = users_key())
+        return User.get_by_id(uid, parent=users_key())
 
     @classmethod
     def by_name(cls, name):
@@ -136,45 +138,46 @@ class User(db.Model):
     @classmethod
     def register(cls, name, pw, email = None):
         pw_hash = make_pw_hash(name, pw)
-        return User(parent = users_key(), name = name, pw_hash = pw_hash, email = email)
+        return User(parent=users_key(), name=name, pw_hash=pw_hash, email=email)
 
     @classmethod
     def login(cls, name, pw):
         u = cls.by_name(name)
         if u and valid_pw(name, pw, u.pw_hash):
             return u
-        
+
 # Class for post entities
 class Post(db.Model):
-    title = db.StringProperty(required = True)
-    image = db.StringProperty(required = False)
-    content = db.TextProperty(required = True)
-    created = db.DateTimeProperty(auto_now_add = True)
-    last_modified = db.DateTimeProperty(auto_now = True)
-    username = db.StringProperty(required = True)
+    title = db.StringProperty(required=True)
+    image = db.StringProperty(required=False)
+    content = db.TextProperty(required=True)
+    created = db.DateTimeProperty(auto_now_add=True)
+    last_modified = db.DateTimeProperty(auto_now=True)
+    username = db.StringProperty(required=True)
     comments = db.IntegerProperty()
     likes = db.IntegerProperty()
 
     def render(self):
         self._render_text = self.content.replace('\n', '<br>')
         if self.user:
-            return render_str("post.html", p = self, username = self.user.name)
+            return render_str("post.html", p=self, username=self.user.name)
         else:
-            return render_str("post.html", p = self)
+            return render_str("post.html", p=self)
 
 # Class for comments entities
 class Comment(db.Model):
-    post_id = db.IntegerProperty(required = True)
-    username = db.StringProperty(required = True)
-    comment = db.TextProperty(required = True)
-    created = db.DateTimeProperty(auto_now_add = True)
+    post_id = db.IntegerProperty(required=True)
+    username = db.StringProperty(required=True)
+    comment = db.TextProperty(required=True)
+    created = db.DateTimeProperty(auto_now_add=True)
 
 # Class for likes entities
 class Like(db.Model):
-    post_id = db.IntegerProperty(required = True)
-    username = db.StringProperty(required = True)
-    created = db.DateTimeProperty(auto_now_add = True)
+    post_id = db.IntegerProperty(required=True)
+    username = db.StringProperty(required=True)
+    created = db.DateTimeProperty(auto_now_add=True)
 
+        
 # Section to render post on permalink page
 class PostPage(BlogHandler):
     def get(self, post_id):
@@ -184,29 +187,71 @@ class PostPage(BlogHandler):
         likeId = None
         try:
             # Retrieve comments for a specific post
-            comments = db.GqlQuery("SELECT * FROM Comment WHERE post_id ="+ post_id +"ORDER BY created DESC LIMIT 20")
+            comments = db.GqlQuery("SELECT * FROM Comment WHERE post_id ="
+                                   +post_id+"ORDER BY created DESC LIMIT 20")
             # Retrieve likes for a specific post
-            likes = db.GqlQuery("SELECT * FROM Like WHERE post_id ="+ post_id)
+            likes = db.GqlQuery("SELECT * FROM Like WHERE post_id="+post_id)
             # Get created date and reformat the datetime format
             date = str(post.created)
-            date = datetime.datetime.strptime(date, '%Y-%m-%d %H:%M:%S.%f').strftime("%d %b %Y")
+            date = datetime.datetime.strptime(date, '%Y-%m-%d %H:%M:%S.%f')
+            date = date.strftime("%d %b %Y")
         except Exception: 
           pass
 
         # Redirect to main page if post doesn't exist
         if not post:
-            self.redirect("/")
-            return
+            return self.redirect('/')
         if self.user:
             for like in likes:
                 if self.user.name == like.username:
                     liked = True
                     likeId = like.key().id()
                     break
-            self.render("post.html", post = post, likes = likes, comments = comments, username = self.user.name,date = date, liked = liked, likeId = likeId)
+            self.render("post.html",
+                        post=post,
+                        likes=likes,
+                        comments=comments,
+                        username=self.user.name,
+                        date=date,
+                        liked=liked,
+                        likeId=likeId                        )
         else:
-            self.render("post.html", post = post, comments = comments, date = date)
+            self.render("post.html", post=post, comments=comments, date=date)
 
+# Handler for editing a post
+class EditPost(BlogHandler):
+    def post(self, post_id):
+        key = db.Key.from_path('Post', int(post_id), parent=blog_key())
+        post = db.get(key)
+        # Edit Post
+        editTitle = self.request.get('editTitle')
+        editImage = self.request.get('editImage')
+        editContent = self.request.get('editContent')
+        # Edit Post. Image parameter is optional
+        if editTitle and editContent and self.user:
+            if post.username == self.user.name:
+                post.image = editImage
+                post.title = editTitle
+                post.content = editContent
+                post.put()                   
+                return self.redirect('/post/'+post_id)
+
+# Handler for deleting a post
+class DeletePost(BlogHandler):
+    def post(self, post_id):
+        key = db.Key.from_path('Post', int(post_id), parent=blog_key())
+        post = db.get(key)
+        deletePost = self.request.get('deletePost')
+        if deletePost and self.user:
+            if post.username == self.user.name:
+                # Delete all comments that belong to the post to be deleted
+                comments = Comment.all().filter('post_id =', int(post_id))
+                for comment in comments:
+                    comment.delete()
+                post.delete()
+                return self.redirect('/post/'+post_id)
+# Handler for adding comments
+class AddComment(BlogHandler):
     def post(self, post_id):
         # Return data of attributes from entity
         key = db.Key.from_path('Post', int(post_id), parent=blog_key())
@@ -214,100 +259,138 @@ class PostPage(BlogHandler):
         # Values from input form
         # Create Post
         comment = self.request.get('content')
-        # Edit Post
-        editTitle = self.request.get('editTitle')
-        editImage = self.request.get('editImage')
-        editContent = self.request.get('editContent')
-        # Delete Post
-        deletePost = self.request.get('deletePost')
-        # Edit Comment
-        commentId = self.request.get('commentId')
-        editComment = self.request.get('editComment')
-        deleteComment = self.request.get('deleteComment')
-        # Like Post
-        likePost = self.request.get('likePost')
-        # Unlike Post
-        unlikePost = self.request.get('unlikePost')
 
         # Add comments       
         # Check if there is a logged in user and content is provided
         if comment and self.user:
-            c = Comment(parent = blog_key(), comment = comment, username = self.user.name, post_id = int(post_id))
+            c = Comment(parent=blog_key(),
+                        comment=comment,
+                        username=self.user.name,
+                        post_id=int(post_id)
+                        )
             c.put()
             # Comments counter
             # Default value is None
             # If post has not comments, set it to one
-            if post.comments == None:
+            if post.comments is None:
                 post.comments = 1
             else:
                 post.comments = int(post.comments) + 1;
             # Update comments count              
             post.put()
-            self.redirect('/post/'+post_id)
+            return self.redirect('/post/'+post_id)
         else:
-            self.redirect('/post/'+post_id)
-        # Edit Post. Image parameter is optional
-        if editTitle and editContent:
-            post.image = editImage
-            post.title = editTitle
-            post.content = editContent
-            post.put()                   
-            self.redirect('/post/'+post_id)
-        # Delete Post and Comments
-        elif deletePost:
-            # Delete all comments that belong to the post to be deleted
-            comments = Comment.all().filter('post_id =', int(post_id))
-            for comment in comments:
-                comment.delete()
-            post.delete()
-        # Edit and Delete Comment    
-        elif commentId:
-            c_key = db.Key.from_path('Comment', int(commentId), parent=blog_key())
-            comment = db.get(c_key)
-            if editComment:
+            return self.redirect('/post/'+post_id)
+
+# Handler for editing a comment
+# Delete all post's comments
+class EditComment(BlogHandler):
+    def post(self, post_id):
+        commentId = self.request.get('commentId')
+        editComment = self.request.get('editComment')
+
+        if commentId and self.user:
+            key = db.Key.from_path('Comment', int(commentId), parent=blog_key())
+            comment = db.get(key)
+            if editComment and comment.username == self.user.name:
                 comment.comment = editComment
                 comment.put()
-                self.redirect('/post/'+post_id)
-            elif deleteComment:
+                return self.redirect('/post/'+post_id)
+        else:
+            return self.redirect('/post/'+post_id)
+
+# Handler for deleting a comment
+class DeleteComment(BlogHandler):
+    def post(self, post_id):
+        commentId = self.request.get('commentId')
+        # Retrieve current comment
+        c_key = db.Key.from_path('Comment', int(commentId), parent=blog_key())
+        comment = db.get(c_key)
+        # Retrieve current post
+        p_key = db.Key.from_path('Post', int(post_id), parent=blog_key())
+        post = db.get(p_key)
+            
+        if commentId and self.user:
+            if comment.username:
                 comment.delete()
                 post.comments = int(post.comments) - 1
                 post.put()
-        # Like Post
-        elif likePost:
-            like = Like(parent = blog_key(), username = self.user.name, post_id = int(post_id))
-            like.put()
-            # Set counter to one if it has no likes when form is submitted
-            if post.likes == None:
-                post.likes = 1
-                post.put()
-                self.redirect('/post/'+post_id)
-            else:
-                post.likes = int(post.likes) + 1
-                post.put()
-                self.redirect('/post/'+post_id) 
-        # Unlike Post
-        elif unlikePost:
+                return self.redirect('/post/'+post_id)
+        else:
+            return self.redirect('/post/'+post_id)
+
+# Like Post
+# Check if user is logged in and the logged in user
+# is not the post author
+class LikePost(BlogHandler):
+    def post(self, post_id):
+        likePost = self.request.get('likePost')
+        liked = False
+        # Retrieve current post
+        key = db.Key.from_path('Post', int(post_id), parent=blog_key())
+        post = db.get(key)
+        # Retrieve all likes belonging to a post
+        likes = Like.all().filter('post_id =', int(post_id))
+        # Check if logged in user has like the post
+        if self.user:
+            for like in likes:
+                if self.user.name == like.username:
+                    liked = True
+                    likeId = like.key().id()
+                    break
+
+        if likePost and self.user:
+            if post.username != self.user.name and liked is False:
+                like = Like(parent=blog_key(), username=self.user.name, post_id=int(post_id))
+                like.put()
+                # Set counter to one if it has no likes when form is submitted
+                if post.likes is None:
+                    post.likes = 1
+                    post.put()
+                    return self.redirect('/post/'+post_id)
+                else:
+                    post.likes = int(post.likes) + 1
+                    post.put()
+                    return self.redirect('/post/'+post_id)
+
+# Handler for unliking a post
+class UnlikePost(BlogHandler):
+    def post(self, post_id):
+        unlikePost = self.request.get('unlikePost')
+        liked = False
+        # Retrieve all likes belonging to a post
+        likes = Like.all().filter('post_id =', int(post_id))
+        # Check if logged in user has like the post
+        if self.user:
+            for like in likes:
+                if self.user.name == like.username:
+                    liked = True
+                    likeId = like.key().id()
+                    break
+        key = db.Key.from_path('Post', int(post_id), parent=blog_key())
+        post = db.get(key)
+        if unlikePost and self.user and liked is True:
             u_key = db.Key.from_path('Like', int(unlikePost), parent=blog_key())
             like = db.get(u_key)
             # Delete like and decrease likes counter
             like.delete()
             post.likes = int(post.likes) - 1
             post.put()
+            return self.redirect('/post/'+post_id)
         else:
-            self.redirect('/post/'+post_id)
-
-
+            return self.redirect('/post/'+post_id)
+        
 # Section for creating a new post
 class NewPost(BlogHandler):
     def get(self):
         if self.user:
             self.render("newpost.html", username=self.user.name)
         else:
-            self.redirect("/login")
+            return self.redirect('/login')
 
     def post(self):
         if not self.user:
-            self.redirect("/")
+            return self.redirect('/login')
 
         # Values from input form
         title = self.request.get('title')
@@ -318,12 +401,23 @@ class NewPost(BlogHandler):
         # Check if posts contains title, content and
         # Check if there is a logged in user
         if title and content and self.user:
-            p = Post(parent = blog_key(), title = title, image = image, content = content, username = username)
+            p = Post(parent=blog_key(),
+                     title=title,
+                     image=image,
+                     content=content,
+                     username=username
+                     )
             p.put()
-            self.redirect('/post/%s' % str(p.key().id()))
+            return self.redirect('/post/%s' % str(p.key().id()))
         else:
             error = "Title and content, please!"
-            self.render("newpost.html", title=title, image = image, content=content, error=error, username=username)
+            self.render("newpost.html",
+                        title=title,
+                        image=image,
+                        content=content,
+                        error=error,
+                        username=username
+                        )
 
 # Input Validation
 USER_RE = re.compile(r"^[a-zA-Z0-9_-]{3,20}$")
@@ -334,7 +428,7 @@ PASS_RE = re.compile(r"^.{3,20}$")
 def valid_password(password):
     return password and PASS_RE.match(password)
 
-EMAIL_RE  = re.compile(r'^[\S]+@[\S]+\.[\S]+$')
+EMAIL_RE = re.compile(r'^[\S]+@[\S]+\.[\S]+$')
 def valid_email(email):
     return not email or EMAIL_RE.match(email)
 
@@ -342,7 +436,7 @@ def valid_email(email):
 class SignUp(BlogHandler):
     def get(self):
         if self.user:
-            self.redirect("/",)
+            return self.redirect('/')
         else:
             self.render("signup.html")
 
@@ -353,7 +447,7 @@ class SignUp(BlogHandler):
         self.verify_pass = self.request.get('verify')
         self.email = self.request.get('email')
 
-        params = dict(username = self.username, email = self.email)
+        params = dict(username=self.username, email=self.email)
 
         # Check if inputs are in a valid format
         if not valid_username(self.username):
@@ -378,26 +472,26 @@ class SignUp(BlogHandler):
 
     def done(self, *a, **kw):
         raise NotImplementedError
-           
+
 class Register(SignUp):
     def done(self):
         u = User.by_name(self.username)
         if u:
             msg = 'That user already exists.'
-            self.render('signup.html', error_username = msg)
+            self.render('signup.html', error_username=msg)
         else:
             u = User.register(self.username, self.password, self.email)
             u.put()
 
             # If registration is successful, log user in
             self.login(u)
-            self.redirect('/')
-            
+            return self.redirect('/')
+
 # Section for login
 class Login(BlogHandler):
     def get(self):
         if self.user:
-            self.redirect('/')
+            return self.redirect('/')
         else:
             self.render('login.html')
 
@@ -407,16 +501,16 @@ class Login(BlogHandler):
         u = User.login(username, password)
         if u:
             self.login(u)
-            self.redirect('/')
+            return self.redirect('/')
         else:
             msg = 'Invalid login'
-            self.render('login.html', error = msg)
+            self.render('login.html', error=msg)
 
 # Call logout function to clear user cookie
 class Logout(BlogHandler):
     def get(self):
         self.logout()
-        self.redirect('/')
+        return self.redirect('/')
 
 
 # Show registered users in users page
@@ -424,13 +518,20 @@ class ShowUsers(BlogHandler):
     def get(self):
         users = db.GqlQuery("SELECT * FROM User LIMIT 10")
         if self.user:
-            self.render('users.html', users = users, username=self.user.name)
+            self.render('users.html', users=users, username=self.user.name)
         else:
-            self.render('users.html', users = users)
+            self.render('users.html', users=users)
 
 app = webapp2.WSGIApplication([
     ('/', MainPage),
     ('/post/([0-9]+)', PostPage),
+    ('/post/([0-9]+)/edit', EditPost),
+    ('/post/([0-9]+)/delete', DeletePost),
+    ('/post/([0-9]+)/addComment', AddComment),
+    ('/post/([0-9]+)/editComment', EditComment),
+    ('/post/([0-9]+)/deleteComment', DeleteComment),
+    ('/post/([0-9]+)/like', LikePost),
+    ('/post/([0-9]+)/unlike', UnlikePost),
     ('/newpost', NewPost),
     ('/signup', Register),
     ('/login', Login),
