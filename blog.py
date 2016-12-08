@@ -94,7 +94,6 @@ class MainPage(BlogHandler):
                     date = datetime.datetime.strptime(date, '%Y-%m-%d %H:%M:%S.%f')
                     date = date.strftime("%d %b %Y")
                     post_id = post.key().id()
-
                 self.render("index.html", username=username, posts=posts, date=date)
             else:
                 self.render("index.html", date=date, username=username)
@@ -214,7 +213,8 @@ class PostPage(BlogHandler):
                         username=self.user.name,
                         date=date,
                         liked=liked,
-                        likeId=likeId                        )
+                        likeId=likeId
+                        )
         else:
             self.render("post.html", post=post, comments=comments, date=date)
 
@@ -235,6 +235,8 @@ class EditPost(BlogHandler):
                 post.content = editContent
                 post.put()                   
                 return self.redirect('/post/'+post_id)
+        else:
+            return self.redirect('/post/'+post_id)
 
 # Handler for deleting a post
 class DeletePost(BlogHandler):
@@ -250,6 +252,7 @@ class DeletePost(BlogHandler):
                     comment.delete()
                 post.delete()
                 return self.redirect('/post/'+post_id)
+            
 # Handler for adding comments
 class AddComment(BlogHandler):
     def post(self, post_id):
@@ -285,14 +288,14 @@ class AddComment(BlogHandler):
 # Handler for editing a comment
 # Delete all post's comments
 class EditComment(BlogHandler):
-    def post(self, post_id):
+    def post(self,post_id):
         commentId = self.request.get('commentId')
         editComment = self.request.get('editComment')
 
-        if commentId and self.user:
+        if commentId and editComment and self.user:
             key = db.Key.from_path('Comment', int(commentId), parent=blog_key())
             comment = db.get(key)
-            if editComment and comment.username == self.user.name:
+            if comment.username == self.user.name:
                 comment.comment = editComment
                 comment.put()
                 return self.redirect('/post/'+post_id)
@@ -316,8 +319,8 @@ class DeleteComment(BlogHandler):
                 post.comments = int(post.comments) - 1
                 post.put()
                 return self.redirect('/post/'+post_id)
-        else:
-            return self.redirect('/post/'+post_id)
+            else:
+                return self.redirect('/post/'+post_id)
 
 # Like Post
 # Check if user is logged in and the logged in user
@@ -352,6 +355,8 @@ class LikePost(BlogHandler):
                     post.likes = int(post.likes) + 1
                     post.put()
                     return self.redirect('/post/'+post_id)
+            else:
+                return self.redirect('/post/'+post_id)
 
 # Handler for unliking a post
 class UnlikePost(BlogHandler):
