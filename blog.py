@@ -176,82 +176,87 @@ class Like(db.Model):
     username = db.StringProperty(required=True)
     created = db.DateTimeProperty(auto_now_add=True)
 
-        
 # Section to render post on permalink page
 class PostPage(BlogHandler):
     def get(self, post_id):
         key = db.Key.from_path('Post', int(post_id), parent=blog_key())
         post = db.get(key)
-        liked = False
-        likeId = None
-        try:
-            # Retrieve comments for a specific post
-            comments = db.GqlQuery("SELECT * FROM Comment WHERE post_id ="
-                                   +post_id+"ORDER BY created DESC LIMIT 20")
-            # Retrieve likes for a specific post
-            likes = db.GqlQuery("SELECT * FROM Like WHERE post_id="+post_id)
-            # Get created date and reformat the datetime format
-            date = str(post.created)
-            date = datetime.datetime.strptime(date, '%Y-%m-%d %H:%M:%S.%f')
-            date = date.strftime("%d %b %Y")
-        except Exception: 
-          pass
+        if post:
+            liked = False
+            likeId = None
+            try:
+                # Retrieve comments for a specific post
+                comments = db.GqlQuery("SELECT * FROM Comment WHERE post_id ="
+                                       +post_id+"ORDER BY created DESC LIMIT 20")
+                # Retrieve likes for a specific post
+                likes = db.GqlQuery("SELECT * FROM Like WHERE post_id="+post_id)
+                # Get created date and reformat the datetime format
+                date = str(post.created)
+                date = datetime.datetime.strptime(date, '%Y-%m-%d %H:%M:%S.%f')
+                date = date.strftime("%d %b %Y")
+            except Exception: 
+              pass
 
-        # Redirect to main page if post doesn't exist
-        if not post:
-            return self.redirect('/')
-        if self.user:
-            for like in likes:
-                if self.user.name == like.username:
-                    liked = True
-                    likeId = like.key().id()
-                    break
-            self.render("post.html",
-                        post=post,
-                        likes=likes,
-                        comments=comments,
-                        username=self.user.name,
-                        date=date,
-                        liked=liked,
-                        likeId=likeId
-                        )
+            if self.user:
+                for like in likes:
+                    if self.user.name == like.username:
+                        liked = True
+                        likeId = like.key().id()
+                        break
+                self.render("post.html",
+                            post=post,
+                            likes=likes,
+                            comments=comments,
+                            username=self.user.name,
+                            date=date,
+                            liked=liked,
+                            likeId=likeId
+                            )
+            else:
+                self.render("post.html", post=post, comments=comments, date=date)
         else:
-            self.render("post.html", post=post, comments=comments, date=date)
+            return self.redirect('/')
 
 # Handler for editing a post
 class EditPost(BlogHandler):
     def post(self, post_id):
         key = db.Key.from_path('Post', int(post_id), parent=blog_key())
         post = db.get(key)
-        # Edit Post
-        editTitle = self.request.get('editTitle')
-        editImage = self.request.get('editImage')
-        editContent = self.request.get('editContent')
-        # Edit Post. Image parameter is optional
-        if editTitle and editContent and self.user:
-            if post.username == self.user.name:
-                post.image = editImage
-                post.title = editTitle
-                post.content = editContent
-                post.put()                   
+        if post:
+            # Edit Post
+            editTitle = self.request.get('editTitle')
+            editImage = self.request.get('editImage')
+            editContent = self.request.get('editContent')
+            # Edit Post. Image parameter is optional
+            if editTitle and editContent and self.user:
+                if post.username == self.user.name:
+                    post.image = editImage
+                    post.title = editTitle
+                    post.content = editContent
+                    post.put()                   
+                    return self.redirect('/post/'+post_id)
+            else:
                 return self.redirect('/post/'+post_id)
         else:
-            return self.redirect('/post/'+post_id)
+            return self.redirect('/')
 
 # Handler for deleting a post
 class DeletePost(BlogHandler):
     def post(self, post_id):
         key = db.Key.from_path('Post', int(post_id), parent=blog_key())
         post = db.get(key)
-        deletePost = self.request.get('deletePost')
-        if deletePost and self.user:
-            if post.username == self.user.name:
-                # Delete all comments that belong to the post to be deleted
-                comments = Comment.all().filter('post_id =', int(post_id))
-                for comment in comments:
-                    comment.delete()
-                post.delete()
-                return self.redirect('/post/'+post_id)
+        if post:
+            deletePost = self.request.get('deletePost')
+            if deletePost and self.user:
+                if post.username == self.user.name:
+                    # Delete all comments that belong to the post to be deleted
+                    comments = Comment.all().filter('post_id =', int(post_id))
+                    for comment in comments:
+                        comment.delete()
+                    post.delete()
+                    return self.redirect('/post/'+post_id)
+        else:
+            return self.redirect('/')
             
 # Handler for adding comments
 class AddComment(BlogHandler):
@@ -259,131 +264,152 @@ class AddComment(BlogHandler):
         # Return data of attributes from entity
         key = db.Key.from_path('Post', int(post_id), parent=blog_key())
         post = db.get(key)
-        # Values from input form
-        # Create Post
-        comment = self.request.get('content')
+        if post:
+            # Values from input form
+            # Create Post
+            comment = self.request.get('content')
 
-        # Add comments       
-        # Check if there is a logged in user and content is provided
-        if comment and self.user:
-            c = Comment(parent=blog_key(),
-                        comment=comment,
-                        username=self.user.name,
-                        post_id=int(post_id)
-                        )
-            c.put()
-            # Comments counter
-            # Default value is None
-            # If post has not comments, set it to one
-            if post.comments is None:
-                post.comments = 1
+            # Add comments       
+            # Check if there is a logged in user and content is provided
+            if comment and self.user:
+                c = Comment(parent=blog_key(),
+                            comment=comment,
+                            username=self.user.name,
+                            post_id=int(post_id)
+                            )
+                c.put()
+                # Comments counter
+                # Default value is None
+                # If post has not comments, set it to one
+                if post.comments is None:
+                    post.comments = 1
+                else:
+                    post.comments = int(post.comments) + 1;
+                # Update comments count              
+                post.put()
+                return self.redirect('/post/'+post_id)
             else:
-                post.comments = int(post.comments) + 1;
-            # Update comments count              
-            post.put()
-            return self.redirect('/post/'+post_id)
+                return self.redirect('/post/'+post_id)
         else:
-            return self.redirect('/post/'+post_id)
+            return self.redirect('/')
 
 # Handler for editing a comment
 # Delete all post's comments
 class EditComment(BlogHandler):
     def post(self,post_id):
-        commentId = self.request.get('commentId')
-        editComment = self.request.get('editComment')
-
-        if commentId and editComment and self.user:
-            key = db.Key.from_path('Comment', int(commentId), parent=blog_key())
-            comment = db.get(key)
-            if comment.username == self.user.name:
-                comment.comment = editComment
-                comment.put()
-                return self.redirect('/post/'+post_id)
+        key = db.Key.from_path('Post', int(post_id), parent=blog_key())
+        post = db.get(key)
+        if post:
+            commentId = self.request.get('commentId')
+            editComment = self.request.get('editComment')
+            if commentId and editComment and self.user:
+                key = db.Key.from_path('Comment', int(commentId), parent=blog_key())
+                comment = db.get(key)
+                if comment:
+                    if comment.username == self.user.name:
+                        comment.comment = editComment
+                        comment.put()
+                        return self.redirect('/post/'+post_id)
+                else:
+                    return self.redirect('/post/'+post_id)
+            else:
+                return self.redirect('/')
         else:
-            return self.redirect('/post/'+post_id)
+            return self.redirect('/')
 
 # Handler for deleting a comment
 class DeleteComment(BlogHandler):
     def post(self, post_id):
-        commentId = self.request.get('commentId')
-        # Retrieve current comment
-        c_key = db.Key.from_path('Comment', int(commentId), parent=blog_key())
-        comment = db.get(c_key)
-        # Retrieve current post
-        p_key = db.Key.from_path('Post', int(post_id), parent=blog_key())
-        post = db.get(p_key)
-            
-        if commentId and self.user:
-            if comment.username:
-                comment.delete()
-                post.comments = int(post.comments) - 1
-                post.put()
-                return self.redirect('/post/'+post_id)
+        key = db.Key.from_path('Post', int(post_id), parent=blog_key())
+        post = db.get(key)
+        if post:
+            commentId = self.request.get('commentId')
+            # Retrieve current comment
+            c_key = db.Key.from_path('Comment', int(commentId), parent=blog_key())
+            comment = db.get(c_key)
+            if comment:    
+                if commentId and self.user:
+                    if comment.username:
+                        comment.delete()
+                        post.comments = int(post.comments) - 1
+                        post.put()
+                        return self.redirect('/post/'+post_id)
+                    else:
+                        return self.redirect('/post/'+post_id)
             else:
-                return self.redirect('/post/'+post_id)
+                return self.redirect('/')
+        else:
+            return self.redirect('/')
 
 # Like Post
 # Check if user is logged in and the logged in user
 # is not the post author
 class LikePost(BlogHandler):
     def post(self, post_id):
-        likePost = self.request.get('likePost')
-        liked = False
         # Retrieve current post
         key = db.Key.from_path('Post', int(post_id), parent=blog_key())
         post = db.get(key)
-        # Retrieve all likes belonging to a post
-        likes = Like.all().filter('post_id =', int(post_id))
-        # Check if logged in user has like the post
-        if self.user:
-            for like in likes:
-                if self.user.name == like.username:
-                    liked = True
-                    likeId = like.key().id()
-                    break
+        if post:
+            likePost = self.request.get('likePost')
+            liked = False
+            # Retrieve all likes belonging to a post
+            likes = Like.all().filter('post_id =', int(post_id))
+            # Check if logged in user has like the post
+            if self.user:
+                for like in likes:
+                    if self.user.name == like.username:
+                        liked = True
+                        likeId = like.key().id()
+                        break
 
-        if likePost and self.user:
-            if post.username != self.user.name and liked is False:
-                like = Like(parent=blog_key(), username=self.user.name, post_id=int(post_id))
-                like.put()
-                # Set counter to one if it has no likes when form is submitted
-                if post.likes is None:
-                    post.likes = 1
-                    post.put()
-                    return self.redirect('/post/'+post_id)
+            if likePost and self.user:
+                if post.username != self.user.name and liked is False:
+                    like = Like(parent=blog_key(), username=self.user.name, post_id=int(post_id))
+                    like.put()
+                    # Set counter to one if it has no likes when form is submitted
+                    if post.likes is None:
+                        post.likes = 1
+                        post.put()
+                        return self.redirect('/post/'+post_id)
+                    else:
+                        post.likes = int(post.likes) + 1
+                        post.put()
+                        return self.redirect('/post/'+post_id)
                 else:
-                    post.likes = int(post.likes) + 1
-                    post.put()
                     return self.redirect('/post/'+post_id)
-            else:
-                return self.redirect('/post/'+post_id)
+        else:
+            return self.redirect('/')
 
 # Handler for unliking a post
 class UnlikePost(BlogHandler):
     def post(self, post_id):
-        unlikePost = self.request.get('unlikePost')
-        liked = False
-        # Retrieve all likes belonging to a post
-        likes = Like.all().filter('post_id =', int(post_id))
-        # Check if logged in user has like the post
-        if self.user:
-            for like in likes:
-                if self.user.name == like.username:
-                    liked = True
-                    likeId = like.key().id()
-                    break
         key = db.Key.from_path('Post', int(post_id), parent=blog_key())
         post = db.get(key)
-        if unlikePost and self.user and liked is True:
-            u_key = db.Key.from_path('Like', int(unlikePost), parent=blog_key())
-            like = db.get(u_key)
-            # Delete like and decrease likes counter
-            like.delete()
-            post.likes = int(post.likes) - 1
-            post.put()
-            return self.redirect('/post/'+post_id)
+        if post:
+            unlikePost = self.request.get('unlikePost')
+            liked = False
+            # Retrieve all likes belonging to a post
+            likes = Like.all().filter('post_id =', int(post_id))
+            # Check if logged in user has like the post
+            if self.user:
+                for like in likes:
+                    if self.user.name == like.username:
+                        liked = True
+                        likeId = like.key().id()
+                        break
+
+            if unlikePost and self.user and liked is True:
+                u_key = db.Key.from_path('Like', int(unlikePost), parent=blog_key())
+                like = db.get(u_key)
+                # Delete like and decrease likes counter
+                like.delete()
+                post.likes = int(post.likes) - 1
+                post.put()
+                return self.redirect('/post/'+post_id)
+            else:
+                return self.redirect('/post/'+post_id)
         else:
-            return self.redirect('/post/'+post_id)
+            return self.redirect('/')
         
 # Section for creating a new post
 class NewPost(BlogHandler):
