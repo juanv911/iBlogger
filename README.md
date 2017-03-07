@@ -3,9 +3,6 @@ Multi User Blog for Udacity's Full Stack Web Developer Nanodegree
 
 This is a multi user blog where users can sign in and post blog posts as well as 'Like' and 'Comment' on other posts made on the blog.
 
-## Demo
-<a href="http://iblogger-udacity.appspot.com">Demo</a>
-
 ## Features
 * Registration
 * Login
